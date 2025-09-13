@@ -17,7 +17,7 @@
 
 5) Gerar documentação e disponibilizar os códigos
 
-Captura de dados pelo [Google Patents](https://patents.google.com/).
+Captura de dados do [Google Patents](https://patents.google.com/).
 
 
 ![Image](https://www.gstatic.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png)
