@@ -22,7 +22,8 @@ Captura de dados do [Google Patents](https://patents.google.com/).
 
 ![Image](https://www.gstatic.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png)
 
-#Tecnologias abarcadas
+
+# Tecnologias abarcadas
 
 **Ambiente de Programação**
 - pip (importação de bibliotecas. Definido como padrão quando se instala o Python)
