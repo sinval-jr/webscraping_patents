@@ -1,1 +1,1 @@
-print("test - hello world")
+#Por enquanto sem main - usando apenas testes locais na aba extract_scraping
