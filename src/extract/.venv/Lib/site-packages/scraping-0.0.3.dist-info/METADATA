@@ -1,0 +1,14 @@
+Metadata-Version: 2.0
+Name: scraping
+Version: 0.0.3
+Summary: 1st python package
+Home-page: http://github.com/neocxf/py-starter
+Author: Neo Chen
+Author-email: neocxf@gmail.com
+License: MIT
+Platform: UNKNOWN
+
+# using python to scrape web pages
+
+> contains utils to scrape the web pages
+
