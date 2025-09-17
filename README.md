@@ -17,10 +17,23 @@
 
 5) Gerar documentação e disponibilizar os códigos
 
-Captura de dados pelo [Google Patents](https://patents.google.com/).
+Captura de dados do [Google Patents](https://patents.google.com/).
 
 
 ![Image](https://www.gstatic.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png)
+
+
+# Tecnologias abarcadas
+
+**Ambiente de Programação**
+- pip (importação de bibliotecas. Definido como padrão quando se instala o Python)
+- pipx (ferramenta utilizada para instalar e executar aplicativos de linha de comando (CLIs) de forma isolada em ambientes separados)
+- pyenv (ferramenta utilizada para definição de diferentes versões de Python para cada ambiente em uma mesma máquina, e criação de Ambiente Virtual para isolamento de dependências)
+- git (sistema para controle de versionamento de código)
+
+**Bibliotecas Instaladas**
+- Scrapy (Ambiente: Extract_scraping) - Python 3.12.1
+- Pandas (Ambiente: Transform) - Python 3.12.1
 
 
 
