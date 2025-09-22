@@ -1,0 +1,24 @@
+{
+    "title": "Multitask scheduling method, system and quantum computer system architecture under quantum-classical hybrid architecture",
+    "publication_number": "CN113010302B",
+    "assignee_original": "PLA Information Engineering University",
+    "assignee_current": "Information Engineering University Of Chinese People's Liberation Army Cyberspace Force",
+    "country_name": "China",
+    "abstract": null,
+    "citations": [
+        {
+            "publication_number": "CN111052122A(en)",
+            "priority_date": "2017-09-22",
+            "publication_date": "2020-04-21",
+            "assignee": "国际商业机器公司",
+            "title": "Analog quantum circuits"
+        },
+        {
+            "publication_number": "CN113902120A(en)",
+            "priority_date": "2021-09-18",
+            "publication_date": "2022-01-07",
+            "assignee": "中国人民解放军战略支援部队信息工程大学",
+            "title": "Heterogeneous cloud resolving platform hybrid computing task dynamic self-adaptive partitioning scheduling method and system"
+        }
+    ]
+}
