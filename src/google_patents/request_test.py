@@ -16,7 +16,7 @@ def fetch_page(url: str):
         return response.content
     except requests.exceptions.RequestException as e:
         print(f"Erro ao buscar a URL: {e}")
-        return None1
+        return None
 
 def parse_patent_data(html: bytes) -> dict:
     if not html:
