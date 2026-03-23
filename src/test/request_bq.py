@@ -1,33 +1,36 @@
 import pandas as pd
 from google.cloud import bigquery
-from google.oauth2 import service_account# 1. Configuração da Consulta
+from google.oauth2 import service_account
 
-#Precisa de permissão para acessar o INFORMATION_SCHEMA.JOBS_BY_PROJECT (Usuário do BigQuery e  Leitor de recursos do BigQuery)
+
+
+# Consulta
 query = '''
     SELECT
-    creation_time,
-    job_id,
-    user_email,
-    total_bytes_billed,
-    (total_bytes_billed / POWER(1024, 3)) AS gb_billed,
-    query
+        t.publication_number,
+        t.priority_date,
     FROM
-    `region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
-    WHERE
-    creation_time BETWEEN TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MONTH) AND CURRENT_TIMESTAMP()
-    AND job_type = 'QUERY'
-    AND state = 'DONE'
-    ORDER BY
-    creation_time DESC;
+        `patents-public-data.patents.publications` AS t
+    LIMIT 1000
 '''
-#`liquid-engine-474717-i6`.`region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
 # 2. Autenticação e Cliente BigQuery
 credentials = service_account.Credentials.from_service_account_file(
     filename='GBQ.json', 
     scopes=["https://www.googleapis.com/auth/cloud-platform"]
 )
-# Criação do Cliente BigQuery
 client = bigquery.Client(credentials=credentials, project=credentials.project_id)
+
+# DRY RUN | Estimativa de Custo
+job_config = bigquery.QueryJobConfig(dry_run=True)
+
+print("Executando 'Dry Run' para estimar o custo...")
+dry_run_job = client.query(query, job_config=job_config)
+bytes_estimate = dry_run_job.total_bytes_processed
+gb_estimate = bytes_estimate / (1024 ** 3)
+
+print(f"ESTIMATIVA DA CONSULTA: {gb_estimate:.4f} GB")
+
+# Execução da Consulta
 
 print("Executando a consulta no BigQuery...")
 query_job = client.query(query)  
@@ -36,9 +39,12 @@ print("Aguardando a consulta ser concluída no BigQuery...")
 results = query_job.result()
 print("Consulta concluída. Iniciando download.")
 
-output_file = 'data/bq_consumo.csv'
+output_file = 'data/bq_patents_verifica_campos.csv'
 is_first_chunk = True
 print(f"Iniciando o download e salvamento em '{output_file}'...")
+
+print("Aqui é o resultado do dataframe iterable:")
+print(results)
 
 for chunk_df in results.to_dataframe_iterable():
     if is_first_chunk:
@@ -52,6 +58,9 @@ for chunk_df in results.to_dataframe_iterable():
         print("Mais um bloco anexado...")
 
 print("\n--- Download e salvamento concluídos! ---")
+
+
+#df = query_job.to_dataframe()
 
 print("\n--- Informações de Custo da Consulta ---")
 
