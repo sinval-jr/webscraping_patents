@@ -7,12 +7,16 @@ from src.data.input_limit import input_limit
 
 # Este é o ponto de entrada do programa. Ele executa a consulta, salva os resultados e exibe as informações de custo.
 if __name__ == "__main__":
+    #Etapas de criação da query
+    #1. Imprimi na tela do usuário os campos disponiveis
     print_campos_disponiveis()
+    #2. Solicita ao usuário os campos desejados
     campos_desejados = input("Digite os campos desejados, separados por vírgula: ").split(",")
     campos_desejados = [campo.strip() for campo in campos_desejados]
     print_limites_disponiveis()
     limite = input_limit()
-    query = gerar_query_patents(campos_desejados, limit=limite)
+    # 3. Gera a query com base nos campos desejados e no limite informado
+    query,campos_por_fonte = gerar_query_patents(campos_desejados, limit=limite)
     
     print(query)
     #Antes criação da query
@@ -22,6 +26,6 @@ if __name__ == "__main__":
     if proceed != 's':
         print("Consulta cancelada pelo usuário.")
         exit()
-    query_job = created_query_job(query, CLIENT, arq='bq_patents_citations')
+    query_job = created_query_job(query, CLIENT, arq='bq_patents_citations',campos_por_fonte=campos_por_fonte)
     information_costs(query_job)
     print("Data saved to patents_data_citations.csv")    
