@@ -134,23 +134,36 @@ Execute o script principal a partir da **raiz do projeto**:
 python main.py
 ```
 
-O script é interativo e fará as seguintes perguntas pelo terminal:
+O script é interativo e seguirá as seguintes etapas pelo terminal:
 
-### 1ª Pergunta – Seleção de campos
+### 1ª Etapa – Seleção de campos
 
 O sistema exibirá todos os campos disponíveis, organizados por categoria. Você deverá digitar os campos desejados **separados por vírgula**.
 
-**Exemplo de campos disponíveis:**
+**Campos disponíveis por categoria:**
 
 | Categoria | Campos |
 |---|---|
-| Tabela principal (t1) | `publication_number`, `application_number`, `country_code`, `kind_code`, `filing_data`, `grant_date`, `priority_date`, `inventor`, `assignee`, etc. |
-| Título | `title_text`, `title_language` |
-| Resumo | `abstract_text`, `abstract_language` |
-| Classificações | `ipc_code`, `ipc_inventive`, `uspc_code`, `cpc_code`, etc. |
-| Citações | `citation_publication_number`, `citation_application_number`, `citation_filing_date` |
-| Inventores | `inventor_harmonized_name`, `inventor_harmonized_country_code` |
-| Titulares | `assignee_harmonized_name`, `assignee_harmonized_country_code` |
+| Tabela principal (t1) | `publication_number`, `application_number`, `country_code`, `kind_code`, `application_kind`, `application_number_formatted`, `pct_number`, `family_id`, `spif_publication_number`, `spif_application_number`, `publication_date`, `filing_data`, `grant_date`, `priority_date`, `inventor`, `assignee`, `entity_status`, `art_unit` |
+| Título (title) | `title_text`, `title_language`, `title_truncated` |
+| Resumo (abstract) | `abstract_text`, `abstract_language`, `abstract_truncated` |
+| Reivindicações (claims) | `claims_text`, `claims_language`, `claims_truncated` |
+| Reivindicações HTML (claims_html) | `claims_html_text`, `claims_html_language`, `claims_html_truncated` |
+| Descrição (description) | `description_text`, `description_language`, `description_truncated` |
+| Descrição HTML (description_html) | `description_html_text`, `description_html_language`, `description_html_truncated` |
+| Prioridade (priority_claim) | `priority_publication_number`, `priority_application_number`, `priority_npl_text`, `priority_type`, `priority_category`, `priority_filing_date` |
+| Inventores harmonizados (inventor_harmonized) | `inventor_harmonized_name`, `inventor_harmonized_country_code` |
+| Titulares harmonizados (assignee_harmonized) | `assignee_harmonized_name`, `assignee_harmonized_country_code` |
+| Examinador (examiner) | `examiner_name`, `examiner_department`, `examiner_level` |
+| Classificação USPC (uspc) | `uspc_code`, `uspc_inventive`, `uspc_first`, `uspc_tree` |
+| Classificação IPC (ipc) | `ipc_code`, `ipc_inventive`, `ipc_first`, `ipc_tree` |
+| Classificação IPCR (ipcr) | `ipcr_code`, `ipcr_inventive`, `ipcr_first`, `ipcr_tree` |
+| Classificação FI (fi) | `fi_code`, `fi_inventive`, `fi_first`, `fi_tree` |
+| Classificação FTerm (fterm) | `ft_code`, `ft_inventive`, `ft_first`, `ft_tree` |
+| Classificação Locarno (locarno) | `locarno_code`, `locarno_inventive`, `locarno_first`, `locarno_tree` |
+| Citações (citation) | `citation_publication_number`, `citation_application_number`, `citation_npl_text`, `citation_type`, `citation_category`, `citation_filing_date` |
+| Patentes pai (parent) | `parent_publication_number`, `parent_application_number`, `parent_npl_text`, `parent_type`, `parent_category`, `parent_filing_date` |
+| Patentes filha (child) | `child_publication_number`, `child_application_number`, `child_npl_text`, `child_type`, `child_category`, `child_filing_date` |
 
 **Exemplo de resposta:**
 
@@ -158,7 +171,7 @@ O sistema exibirá todos os campos disponíveis, organizados por categoria. Voc�
 publication_number, title_text, abstract_text, ipc_code, inventor_harmonized_name
 ```
 
-### 2ª Pergunta – Limite de registros
+### 2ª Etapa – Limite de registros
 
 O sistema solicitará que você escolha o limite máximo de patentes retornadas (não afeta o tamanho em GB da consulta, somente o processamento interno do computador. Vale ressaltar que o processamento é feito em partes, logo não irá travar sua máquina somente irá demorar até o download dos arquivos):
 
@@ -167,11 +180,31 @@ Opções:
 1. Limite padrão (1000)
 2. Limite padrão (5000)
 3. Limite padrão (10000)
+4. Sem limite (Todos os dados)
 ```
 
-**Responda com:** `1`, `2` ou `3`.
+**Responda com:** `1`, `2`, `3` ou `4`.
 
-### 3ª Etapa – Estimativa de custo (Dry Run)
+### 3ª Etapa – Filtros de busca
+
+O sistema solicitará filtros opcionais para refinar a consulta. Pressione **Enter** para pular qualquer filtro que não deseja utilizar.
+
+Os filtros disponíveis são:
+
+| Filtro | Descrição | Exemplo de entrada |
+|---|---|---|
+| Data de Prioridade | Data exata ou período (separado por `\|`) | `20200101` ou `20200101 \| 20210101` |
+| Inventor | Nome (ou parte) do inventor | `Silva` |
+| Código do País | Código ISO do país | `BR`, `US`, `JP` |
+| Assignee (Titular) | Nome (ou parte) da empresa/titular | `Petrobras` |
+| Código IPC | Classificação IPC (ou parte) | `A61K` |
+| Número da Publicação | Número exato da publicação | `US-10234567-B2` |
+| Termo na Descrição | Busca por termo no texto do resumo (abstract) | `solar energy` |
+| Termo geral | Busca por termo no título **e** no resumo | `machine learning` |
+
+> 💡 **Dica:** Todos os filtros de texto (inventor, assignee, IPC, abstract, termo geral) são **case-insensitive** — ou seja, `Solar Energy` e `solar energy` retornam os mesmos resultados.
+
+### 4ª Etapa – Estimativa de custo (Dry Run)
 
 O script executará uma simulação da consulta e mostrará a **estimativa de dados processados (em GB)**. Nenhum dado é consumido nesta etapa. Recomenda-se que este valor não ultrapasse o limite de 10GB. Lembrando que o Big Query libera 1 TB para usufruto por mês de forma gratuita
 
@@ -179,7 +212,7 @@ O script executará uma simulação da consulta e mostrará a **estimativa de da
 ESTIMATIVA DA CONSULTA: 0.5423 GB
 ```
 
-### 4ª Pergunta – Confirmação de execução
+### 5ª Etapa – Confirmação de execução
 
 ```
 Deseja prosseguir com a execução da consulta? (s/n)
@@ -189,31 +222,36 @@ Deseja prosseguir com a execução da consulta? (s/n)
 
 ---
 
-## 🔍 Utilização de Filtros
-
-> 🚧 **Seção em construção** – A documentação sobre filtros de busca (por país, data, palavra-chave, IPC, titular, etc.) será adicionada futuramente.
-
----
-
 ## 📊 Estrutura das Planilhas de Saída
 
-Após a execução, o script gera **um ou mais arquivos `.csv`** na raiz do projeto, separados por categoria de dados. Cada arquivo é nomeado com o padrão:
+Após a execução, o script gera **um ou mais arquivos `.csv`** na raiz do projeto, separados por categoria de dados (fonte). Cada arquivo é nomeado com o padrão:
 
 ```
-patent_{categoria}_{YYYYMMDD_HHMMSS}.csv
+patent_{fonte}_{YYYYMMDD_HHMMSS}.csv
 ```
+
+Os arquivos gerados correspondem diretamente às **fontes dos campos selecionados**. Por exemplo, se você selecionar campos da tabela principal (`t1`), do título (`title`) e de citações (`citation`), serão gerados 3 arquivos.
 
 ### Exemplo de arquivos gerados
 
 | Arquivo | Conteúdo |
 |---|---|
 | `patent_t1_20260505_095129.csv` | Dados gerais da patente (número de publicação, datas, inventores, etc.) |
-| `patent_citation_20260505_095129.csv` | Dados de citações vinculadas às patentes |
 | `patent_title_20260505_095129.csv` | Textos de título das patentes |
 | `patent_abstract_20260505_095129.csv` | Textos de resumo das patentes |
+| `patent_claims_20260505_095129.csv` | Textos de reivindicações das patentes |
+| `patent_description_20260505_095129.csv` | Textos de descrição das patentes |
+| `patent_priority_claim_20260505_095129.csv` | Dados de prioridade das patentes |
 | `patent_ipc_20260505_095129.csv` | Classificações IPC das patentes |
+| `patent_uspc_20260505_095129.csv` | Classificações USPC das patentes |
+| `patent_citation_20260505_095129.csv` | Dados de citações vinculadas às patentes |
 | `patent_inventor_harmonized_20260505_095129.csv` | Inventores harmonizados |
 | `patent_assignee_harmonized_20260505_095129.csv` | Titulares harmonizados |
+| `patent_examiner_20260505_095129.csv` | Dados do examinador |
+| `patent_parent_20260505_095129.csv` | Patentes pai (relacionamentos) |
+| `patent_child_20260505_095129.csv` | Patentes filha (relacionamentos) |
+
+> 📝 **Nota:** Somente os arquivos correspondentes às fontes dos campos selecionados serão gerados.
 
 ### Chave de relacionamento entre planilhas
 
@@ -254,9 +292,10 @@ webscraping_patents/
     │   └── information_costs.py     # Exibição de custos pós-execução
     ├── data/
     │   ├── input_limit.py           # Seleção interativa do limite de registros
+    │   ├── input_filters.py         # Seleção interativa de filtros de busca
     │   ├── load_data.py             # Processamento e salvamento dos resultados em CSV
     │   └── transformer.py           # Transformações auxiliares de dados
-    └── filter/                      # (em desenvolvimento)
+    └── filter/                      # (reservado para expansões futuras)
 ```
 
 ---

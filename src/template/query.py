@@ -186,8 +186,7 @@ mapeamento_fontes = {
     'child': dict_campos_child,
 }
 
-def gerar_query_patents(campos_desejados, limit=10000):
-    # Agrupa todos os mapeamentos de campos
+def gerar_query_patents(campos_desejados, limit=10000, filters=None):
     todos_campos = {
         **dict_campos_t1, 
         **dict_campos_title,
@@ -211,11 +210,8 @@ def gerar_query_patents(campos_desejados, limit=10000):
         **dict_campos_child,
     }
     
-    # 1. Identifica as cláusulas SELECT
     select_clauses = [todos_campos[campo] for campo in campos_desejados if campo in todos_campos]
     
-    # 2. Identifica quais fontes (FROM/UNNEST) são necessárias
-    # Sempre incluímos a t1 (tabela principal)
     fontes_necessarias = ['t1']
     
     for campo in campos_desejados:
@@ -258,14 +254,55 @@ def gerar_query_patents(campos_desejados, limit=10000):
         elif campo in dict_campos_child:
             fontes_necessarias.append('child')
             
+    if filters:
+        if 'abstract_text' in filters and 'abstract' not in fontes_necessarias:
+            fontes_necessarias.append('abstract')
+        if 'ipc' in filters and 'ipc' not in fontes_necessarias:
+            fontes_necessarias.append('ipc')
+        if 'general_terms' in filters:
+            if 'abstract' not in fontes_necessarias:
+                fontes_necessarias.append('abstract')
+            if 'title' not in fontes_necessarias:
+                fontes_necessarias.append('title')
+    fontes_necessarias = list(dict.fromkeys(fontes_necessarias))
     from_clauses = [dict_from_bigquery[fonte] for fonte in fontes_necessarias]
 
-    # 3. Monta a String final
+    where_clauses = []
+    if filters:
+        if 'priority_date' in filters:
+            p_date = filters['priority_date']
+            if '|' in p_date:
+                start_date, end_date = [d.strip() for d in p_date.split('|')]
+                where_clauses.append(f"(t1.priority_date >= {start_date} AND t1.priority_date <= {end_date})")
+            else:
+                where_clauses.append(f"t1.priority_date = {p_date}")
+        if 'country_code' in filters:
+            where_clauses.append(f"t1.country_code = '{filters['country_code']}'")
+        if 'publication_number' in filters:
+            where_clauses.append(f"t1.publication_number = '{filters['publication_number']}'")
+        if 'inventor' in filters:
+            where_clauses.append(f"EXISTS(SELECT 1 FROM UNNEST(t1.inventor) AS inv WHERE UPPER(inv) LIKE UPPER('%{filters['inventor']}%'))")
+        if 'assignee' in filters:
+            where_clauses.append(f"EXISTS(SELECT 1 FROM UNNEST(t1.assignee) AS ass WHERE UPPER(ass) LIKE UPPER('%{filters['assignee']}%'))")
+        if 'ipc' in filters:
+            where_clauses.append(f"ipc.code LIKE '%{filters['ipc']}%'")
+        if 'abstract_text' in filters:
+            where_clauses.append(f"UPPER(abstract.text) LIKE UPPER('%{filters['abstract_text']}%')")
+        if 'general_terms' in filters:
+            where_clauses.append(f"(UPPER(abstract.text) LIKE UPPER('%{filters['general_terms']}%') OR UPPER(title.text) LIKE UPPER('%{filters['general_terms']}%'))")
+
+    # 4. Monta a String final
     query = "SELECT\n    "
     query += ",\n    ".join(select_clauses)
     query += "\nFROM\n    "
     query += ",\n    ".join(from_clauses)
-    query += f"\nLIMIT {limit}"
+    
+    if where_clauses:
+        query += "\nWHERE\n    "
+        query += "\n    AND ".join(where_clauses)
+        
+    if limit is not None:
+        query += f"\nLIMIT {limit}"
 
     campos_por_fonte = {}
     for campo in campos_desejados:
@@ -349,4 +386,4 @@ def print_limites_disponiveis():
     print("1. - 1000")
     print("2. - 5000")
     print("3. - 10000")
-    
+    print("4. - Sem limite (Todos os dados)")

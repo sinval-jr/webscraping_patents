@@ -5,6 +5,7 @@ def input_limit():
     print("1. Limite padrão (1000)")
     print("2. Limite padrão (5000)")
     print("3. Limite padrão (10000)")
+    print("4. Sem limite (Todos os dados)")
     choice = input("Escolha uma opção: ")
     if choice == "1":
         return 1000
@@ -12,7 +13,8 @@ def input_limit():
         return 5000
     elif choice == "3":
         return 10000
-    
+    elif choice == "4":
+        return None
     else:
         print("Opção inválida. Usando limite padrão de 1000.")
         return 1000
