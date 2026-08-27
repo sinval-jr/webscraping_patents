@@ -1,3 +1,4 @@
 .env
 src/test/
 .agent/
+__pycache__
