@@ -16,22 +16,19 @@ def process_and_save_data(results, campos_por_fonte: dict):
         
     for chunk_df in results.to_dataframe_iterable():
         for fonte, campos in campos_por_fonte.items():
-            # Filtra apenas as colunas que estão presentes no dataframe retornado
+            
             colunas_fonte = [col for col in campos if col in chunk_df.columns]
             
-            # Adicionar a chave primária 'publication_number' para tabelas que não sejam a t1
-            # Isso é importante para conseguirmos fazer o JOIN depois
+            
             if fonte != 't1' and 'publication_number' in chunk_df.columns and 'publication_number' not in colunas_fonte:
                 colunas_fonte.insert(0, 'publication_number')
                 
             if not colunas_fonte:
-                continue
-                
-            # Cria DataFrame com as colunas da fonte e remove os duplicados
+                continue  
+            
             df_fonte = chunk_df[colunas_fonte].copy()
             df_fonte.drop_duplicates(inplace=True)
             
-            # Salva no arquivo CSV correspondente
             if is_first_chunk:
                 df_fonte.to_csv(output_files[fonte], index=False, mode='w')
             else:
@@ -41,4 +38,4 @@ def process_and_save_data(results, campos_por_fonte: dict):
             print("Primeiro bloco salvo (com cabeçalho) para todas as fontes...")
             is_first_chunk = False
         else:
-            print("Mais um bloco anexado para todas as fontes...")
+            print("Mais um bloco anexado para todas as fontes...")
