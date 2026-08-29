@@ -11,7 +11,7 @@ dict_campos_t1 ={
     "spif_publication_number": "t1.spif_publication_number as spif_publication_number",
     "spif_application_number": "t1.spif_application_number as spif_application_number",
     "publication_date": "t1.publication_date as publication_date",
-    "filing_data": "t1.filing_data as filing_data",
+    "filing_date": "t1.filing_date as filing_date",
     "grant_date": "t1.grant_date as grant_date",
     "priority_date": "t1.priority_date as priority_date",
     "inventor": "t1.inventor as inventor",
@@ -117,49 +117,49 @@ dict_campos_locarno = {
 dict_campos_citation = {
     'citation_publication_number': 'citation.publication_number as citation_publication_number',
     'citation_application_number': 'citation.application_number as citation_application_number',
-    'citation_npl_text': 'citation.first as citation_first',
-    'citation_type': 'citation.tree as citation_type',
-    'citation_category': 'citation.tree as citation_category',
+    'citation_npl_text': 'citation.npl_text as citation_npl_text',
+    'citation_type': 'citation.type as citation_type',
+    'citation_category': 'citation.category as citation_category',
     'citation_filing_date': 'citation.filing_date as citation_filling_date'
 }
 dict_campos_parent = {
     'parent_publication_number': 'parent.publication_number as parent_publication_number',
     'parent_application_number': 'parent.application_number as parent_application_number',
-    'parent_npl_text': 'parent.first as parent_first',
-    'parent_type': 'parent.tree as parent_type',
-    'parent_category': 'parent.tree as parent_category',
+    'parent_npl_text': 'parent.npl_text as parent_npl_text',
+    'parent_type': 'parent.type as parent_type',
+    'parent_category': 'parent.category as parent_category',
     'parent_filing_date': 'parent.filing_date as parent_filling_date'   
 }
 dict_campos_child = {
     'child_publication_number': 'child.publication_number as child_publication_number',
     'child_application_number': 'child.application_number as child_application_number',
-    'child_npl_text': 'child.first as child_first',
-    'child_type': 'child.tree as child_type',
-    'child_category': 'child.tree as child_category',
+    'child_npl_text': 'child.npl_text as child_npl_text',
+    'child_type': 'child.type as child_type',
+    'child_category': 'child.category as child_category',
     'child_filing_date': 'child.filing_date as child_filling_date'   
 }
 
 dict_from_bigquery = {
-    't1': '`patents-public-data.patents.publications` AS t1',
-    'title': 't1.title_localized AS title',
-    'abstract': 't1.abstract_localized AS abstract',
-    'claims': 't1.claims_localized AS claims',
-    'claims_html': 't1.claims_localized_html AS claims_html',
-    'description': 't1.description_localized AS description',
-    'description_html': 't1.description_localized_html AS description_html',
-    'priority_claim': 't1.priority_claim AS priority_claim',
-    'inventor_harmonized': 't1.inventor_harmonized AS inventor_harmonized',
-    'assignee_harmonized': 't1.assignee_harmonized AS assignee_harmonized',
-    'examiner': 't1.examiner AS examiner',
-    'uspc': 't1.uspc AS uspc',
-    'ipc': 't1.ipc AS ipc',
-    'ipcr': 't1.ipcr AS ipcr',
-    'fi': 't1.fi AS fi',
-    'fterm': 't1.fterm AS fterm',
-    'locarno': 't1.locarno AS locarno',
-    'citation': 't1.citation AS citation',
-    'parent': 't1.parent AS parent',
-    'child': 't1.child AS child',
+    "t1": "`patents-public-data.patents.publications` AS t1",
+    "title": "LEFT JOIN UNNEST(t1.title_localized) AS title",
+    "abstract": "LEFT JOIN UNNEST(t1.abstract_localized) AS abstract",
+    "claims": "LEFT JOIN UNNEST(t1.claims_localized) AS claims",
+    "claims_html": "LEFT JOIN UNNEST(t1.claims_localized_html) AS claims_html",
+    "description": "LEFT JOIN UNNEST(t1.description_localized) AS description",
+    "description_html": "LEFT JOIN UNNEST(t1.description_localized_html) AS description_html",
+    "priority_claim": "LEFT JOIN UNNEST(t1.priority_claim) AS priority_claim",
+    "inventor_harmonized": "LEFT JOIN UNNEST(t1.inventor_harmonized) AS inventor_harmonized",
+    "assignee_harmonized": "LEFT JOIN UNNEST(t1.assignee_harmonized) AS assignee_harmonized",
+    "examiner": "LEFT JOIN UNNEST(t1.examiner) AS examiner",
+    "uspc": "LEFT JOIN UNNEST(t1.uspc) AS uspc",
+    "ipc": "LEFT JOIN UNNEST(t1.ipc) AS ipc",
+    "ipcr": "LEFT JOIN UNNEST(t1.ipcr) AS ipcr",
+    "fi": "LEFT JOIN UNNEST(t1.fi) AS fi",
+    "fterm": "LEFT JOIN UNNEST(t1.fterm) AS fterm",
+    "locarno": "LEFT JOIN UNNEST(t1.locarno) AS locarno",
+    "citation": "LEFT JOIN UNNEST(t1.citation) AS citation",
+    "parent": "LEFT JOIN UNNEST(t1.parent) AS parent",
+    "child": "LEFT JOIN UNNEST(t1.child) AS child",
 }
 
 
@@ -381,9 +381,3 @@ def print_campos_disponiveis():
     for key in dict_campos_child.keys():
         print(f"- {key}")
 
-def print_limites_disponiveis():
-    print("Limites disponíveis:")
-    print("1. - 1000")
-    print("2. - 5000")
-    print("3. - 10000")
-    print("4. - Sem limite (Todos os dados)")
