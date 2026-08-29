@@ -2,7 +2,7 @@ from src.config.credentials import CLIENT
 from src.request.dry_run import configure_and_execute_dry_run
 from src.request.query_job import created_query_job
 from src.request.information_costs import information_costs
-from src.template.query import gerar_query_patents, print_campos_disponiveis, print_limites_disponiveis
+from src.template.query import gerar_query_patents, print_campos_disponiveis
 from src.data.input_limit import input_limit
 from src.data.input_filters import input_filters
 
@@ -13,7 +13,7 @@ if __name__ == "__main__":
     #2. Solicita ao usuário os campos desejados
     campos_desejados = input("Digite os campos desejados, separados por vírgula: ").split(",")
     campos_desejados = [campo.strip() for campo in campos_desejados]
-    print_limites_disponiveis()
+
     limite = input_limit()
     
     # 2.1 Solicita os filtros ao usuário
