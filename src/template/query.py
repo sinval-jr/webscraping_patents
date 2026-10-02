@@ -1,3 +1,4 @@
+from google.cloud import bigquery
 
 dict_campos_t1 ={
     "publication_number": "t1.publication_number AS publication_number",
@@ -254,55 +255,65 @@ def gerar_query_patents(campos_desejados, limit=10000, filters=None):
         elif campo in dict_campos_child:
             fontes_necessarias.append('child')
             
-    if filters:
-        if 'abstract_text' in filters and 'abstract' not in fontes_necessarias:
-            fontes_necessarias.append('abstract')
-        if 'ipc' in filters and 'ipc' not in fontes_necessarias:
-            fontes_necessarias.append('ipc')
-        if 'general_terms' in filters:
-            if 'abstract' not in fontes_necessarias:
-                fontes_necessarias.append('abstract')
-            if 'title' not in fontes_necessarias:
-                fontes_necessarias.append('title')
     fontes_necessarias = list(dict.fromkeys(fontes_necessarias))
-    from_clauses = [dict_from_bigquery[fonte] for fonte in fontes_necessarias]
 
-    where_clauses = []
+    # Filtros são aplicados numa subquery sobre a tabela base, ANTES do LIMIT e do
+    # UNNEST: assim o LIMIT conta patentes (linhas de t1), não linhas expandidas
+    # pelos LEFT JOINs de classificações/citações/etc.
+    row_filters = []
+    query_parameters = []
     if filters:
         if 'priority_date' in filters:
             p_date = filters['priority_date']
             if '|' in p_date:
                 start_date, end_date = [d.strip() for d in p_date.split('|')]
-                where_clauses.append(f"(t1.priority_date >= {start_date} AND t1.priority_date <= {end_date})")
+                row_filters.append("priority_date BETWEEN @priority_date_start AND @priority_date_end")
+                query_parameters.append(bigquery.ScalarQueryParameter('priority_date_start', 'INT64', int(start_date)))
+                query_parameters.append(bigquery.ScalarQueryParameter('priority_date_end', 'INT64', int(end_date)))
             else:
-                where_clauses.append(f"t1.priority_date = {p_date}")
+                row_filters.append("priority_date = @priority_date")
+                query_parameters.append(bigquery.ScalarQueryParameter('priority_date', 'INT64', int(p_date)))
         if 'country_code' in filters:
-            where_clauses.append(f"t1.country_code = '{filters['country_code']}'")
+            row_filters.append("country_code = @country_code")
+            query_parameters.append(bigquery.ScalarQueryParameter('country_code', 'STRING', filters['country_code']))
         if 'publication_number' in filters:
-            where_clauses.append(f"t1.publication_number = '{filters['publication_number']}'")
+            row_filters.append("publication_number = @publication_number")
+            query_parameters.append(bigquery.ScalarQueryParameter('publication_number', 'STRING', filters['publication_number']))
         if 'inventor' in filters:
-            where_clauses.append(f"EXISTS(SELECT 1 FROM UNNEST(t1.inventor) AS inv WHERE UPPER(inv) LIKE UPPER('%{filters['inventor']}%'))")
+            row_filters.append("EXISTS(SELECT 1 FROM UNNEST(inventor) AS inv WHERE UPPER(inv) LIKE UPPER(@inventor))")
+            query_parameters.append(bigquery.ScalarQueryParameter('inventor', 'STRING', f"%{filters['inventor']}%"))
         if 'assignee' in filters:
-            where_clauses.append(f"EXISTS(SELECT 1 FROM UNNEST(t1.assignee) AS ass WHERE UPPER(ass) LIKE UPPER('%{filters['assignee']}%'))")
+            row_filters.append("EXISTS(SELECT 1 FROM UNNEST(assignee) AS ass WHERE UPPER(ass) LIKE UPPER(@assignee))")
+            query_parameters.append(bigquery.ScalarQueryParameter('assignee', 'STRING', f"%{filters['assignee']}%"))
         if 'ipc' in filters:
-            where_clauses.append(f"ipc.code LIKE '%{filters['ipc']}%'")
+            row_filters.append("EXISTS(SELECT 1 FROM UNNEST(ipc) AS i WHERE i.code LIKE @ipc)")
+            query_parameters.append(bigquery.ScalarQueryParameter('ipc', 'STRING', f"%{filters['ipc']}%"))
         if 'abstract_text' in filters:
-            where_clauses.append(f"UPPER(abstract.text) LIKE UPPER('%{filters['abstract_text']}%')")
+            row_filters.append("EXISTS(SELECT 1 FROM UNNEST(abstract_localized) AS a WHERE UPPER(a.text) LIKE UPPER(@abstract_text))")
+            query_parameters.append(bigquery.ScalarQueryParameter('abstract_text', 'STRING', f"%{filters['abstract_text']}%"))
         if 'general_terms' in filters:
-            where_clauses.append(f"(UPPER(abstract.text) LIKE UPPER('%{filters['general_terms']}%') OR UPPER(title.text) LIKE UPPER('%{filters['general_terms']}%'))")
+            row_filters.append(
+                "(EXISTS(SELECT 1 FROM UNNEST(title_localized) AS t WHERE UPPER(t.text) LIKE UPPER(@general_terms))"
+                " OR EXISTS(SELECT 1 FROM UNNEST(abstract_localized) AS a WHERE UPPER(a.text) LIKE UPPER(@general_terms)))"
+            )
+            query_parameters.append(bigquery.ScalarQueryParameter('general_terms', 'STRING', f"%{filters['general_terms']}%"))
+
+    base_query = "SELECT * FROM `patents-public-data.patents.publications`"
+    if row_filters:
+        base_query += "\n    WHERE\n        " + "\n        AND ".join(row_filters)
+    if limit is not None:
+        # LIMIT não aceita parâmetro de query no BigQuery; seguro aqui porque já é int
+        # validado por input_limit.py (ou convertido abaixo), nunca texto livre do usuário.
+        base_query += f"\n    LIMIT {int(limit)}"
+
+    from_clauses = [f"(\n    {base_query}\n) AS t1"]
+    from_clauses += [dict_from_bigquery[fonte] for fonte in fontes_necessarias if fonte != 't1']
 
     # 4. Monta a String final
     query = "SELECT\n    "
     query += ",\n    ".join(select_clauses)
     query += "\nFROM\n    "
-    query += ",\n    ".join(from_clauses)
-    
-    if where_clauses:
-        query += "\nWHERE\n    "
-        query += "\n    AND ".join(where_clauses)
-        
-    if limit is not None:
-        query += f"\nLIMIT {limit}"
+    query += "\n    ".join(from_clauses)
 
     campos_por_fonte = {}
     for campo in campos_desejados:
@@ -314,7 +325,7 @@ def gerar_query_patents(campos_desejados, limit=10000, filters=None):
                 break
             
     print("Campos por fonte:", campos_por_fonte)
-    return query,campos_por_fonte
+    return query, campos_por_fonte, query_parameters
 
 # --- Exemplo de Uso ---
 
